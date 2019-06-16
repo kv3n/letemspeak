@@ -4,6 +4,7 @@ venv/
 data/
 output/
 *.DS_Store
+*avspeech_*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
