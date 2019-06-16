@@ -5,7 +5,7 @@ import os
 import shutil
 import csv
 import random
-import ssl
+import json
 
 
 def prep_directory():
@@ -32,34 +32,47 @@ def download_data(filename, output_dir, limit=0):
             if row[0] not in clip_dictionary:
                 clip_dictionary[row[0]] = []
 
-            clip_dictionary[row[0]].append((float(row[1]), float(row[2])))
+            clip_dictionary[row[0]].append((float(row[1]), float(row[2]), float(row[3]), float(row[4])))
 
     if limit:
         limited_keys = random.sample(list(clip_dictionary.keys()), limit)
         clip_dictionary = {key: clip_dictionary[key] for key in limited_keys}
 
+    meta_data = {}
     for clip_id, params in clip_dictionary.items():
         download_opts = {
             'format': 'mp4',
             'outtmpl': 'data/{}.mp4'.format(clip_id),
             'nocheckcertificate': True
         }
+
         try:
             with youtube_dl.YoutubeDL(download_opts) as ydl:
                 ydl.download(['https://www.youtube.com/watch?v={}'.format(clip_id)])
 
-            main_clip = VideoFileClip('data/{}.mp4'.format(clip_id))
-
             for idx, param in enumerate(params):
-                sub_clip = main_clip.subclip(param[0], param[1])
-                print(type(sub_clip))
-                sub_clip.write_videofile('{}/{}_{}.mp4'.format(output_dir, clip_id, idx), codec="libx264", audio_codec="aac")
-                sub_clip.close()
+                main_clip = VideoFileClip('data/{}.mp4'.format(clip_id))
+                print(
+                    '[IMP] {}_{} -> {} to {} from max {}'.format(clip_id, idx, param[0], param[1], main_clip.duration))
 
-            main_clip.close()
+                sub_clip = main_clip.subclip(param[0], param[1])
+
+                sub_clip_id = '{}_{}'.format(clip_id, idx)
+                sub_clip_file_name = '{}/{}.mp4'.format(output_dir, sub_clip_id)
+                sub_clip.write_videofile(sub_clip_file_name, codec="libx264", audio_codec="aac")
+
+                sub_clip.close()
+                main_clip.close()
+
+                meta_data[sub_clip_id] = (param[2], param[3])
+
             os.remove('data/{}.mp4'.format(clip_id))
-        except:
-            print('Could not download 1 video')
+
+        except youtube_dl.utils.DownloadError as error:
+            print(error)
+
+    with open('{}/meta.json'.format(output_dir), 'w') as fp:
+        fp.write(json.dumps(meta_data))
 
 
 def main():
