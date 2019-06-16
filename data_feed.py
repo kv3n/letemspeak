@@ -4,6 +4,9 @@ import random
 
 from moviepy.editor import VideoFileClip
 
+from video_processor import process_video, filter_ground_truth
+from audio_processor import process_audio
+
 
 class Feed:
     def __init__(self, feed_dir, filter_ground_truth):
@@ -33,28 +36,16 @@ class Feed:
 
         return frames, waveform
 
-    def process_audio(self, waveform):
-        processed_waveform = np.copy(waveform)
-        return processed_waveform
-
-    def process_video(self, frames):
-        processed_frames = np.copy(frames)
-        return processed_frames
-
-    def filter_ground_truth(self, frames):
-        filtered_frames = np.copy(frames)
-        return filtered_frames
-
     def request_sample(self):
-        sample_key = self.samples[random.randint(0, len(self.samples))]
+        sample_key = self.samples[random.randint(0, len(self.samples)-1)]
 
         frames, wavefrom = self.build_sample(sample_key)
 
-        frames = self.process_video(frames)
-        wavefrom = self.process_audio(wavefrom)
+        frames = process_video(frames)
+        wavefrom = process_audio(wavefrom)
 
         if self.should_filter_ground_truth:
-            frames = self.filter_ground_truth(frames)
+            frames = filter_ground_truth(frames)
 
         return sample_key, frames, wavefrom
 
