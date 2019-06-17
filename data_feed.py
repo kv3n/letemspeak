@@ -4,7 +4,7 @@ import random
 
 from moviepy.editor import VideoFileClip
 
-from video_processor import process_video, filter_ground_truth
+from video_processor import process_video
 from audio_processor import process_audio
 
 
@@ -32,7 +32,6 @@ class Feed:
         waveform = audio.to_soundarray()[:, 0]  # We only care about the left channel
 
         frames = [frame for frame in video.iter_frames(with_times=False)]
-        frames = np.array(frames)
 
         return frames, waveform
 
@@ -41,11 +40,9 @@ class Feed:
 
         frames, wavefrom = self.build_sample(sample_key)
 
-        frames = process_video(frames)
+        true_speaker_location = self.feed_dict[sample_key] if self.should_filter_ground_truth else None
+        frames = process_video(frames=frames, ground_truth=true_speaker_location)
         wavefrom = process_audio(wavefrom)
-
-        if self.should_filter_ground_truth:
-            frames = filter_ground_truth(frames)
 
         return sample_key, frames, wavefrom
 
@@ -59,13 +56,15 @@ def main():
     testing_feed = Feed('data/test', filter_ground_truth=False)
 
     key, frames, wavefrom = training_feed.request_sample()
-    print('Train Requested {}: got {} frames of video and {} timeslices of audio'.format(key, frames.shape, wavefrom.shape))
+    print('Train Requested {}: got {} frames of video and {} timeslices of audio'.format(key, len(frames), wavefrom.shape))
 
+    """
     key, frames, wavefrom = training_feed.request_sample()
-    print('Train Requested {}: got {} frames of video and {} timeslices of audio'.format(key, frames.shape, wavefrom.shape))
+    print('Train Requested {}: got {} frames of video and {} timeslices of audio'.format(key, len(frames), wavefrom.shape))
 
     key, frames, wavefrom = testing_feed.request_sample()
-    print('Test Requested {}: got {} frames of video and {} timeslices of audio'.format(key, frames.shape, wavefrom.shape))
+    print('Test Requested {}: got {} frames of video and {} timeslices of audio'.format(key, len(frames), wavefrom.shape))
+    """
 
 
 if __name__ == '__main__':
