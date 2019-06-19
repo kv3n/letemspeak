@@ -37,6 +37,8 @@ class Feed:
 
     def request_sample(self):
         sample_key = self.samples[random.randint(0, len(self.samples)-1)]
+        sample_key = '1yo45HeVCDE_26'
+        print('Picked Key: {}'.format(sample_key))
 
         frames, wavefrom = self.build_sample(sample_key)
 
@@ -56,7 +58,7 @@ def main():
     testing_feed = Feed('data/test', filter_ground_truth=False)
 
     key, frames, wavefrom = training_feed.request_sample()
-    print('Train Requested {}: got {} frames of video and {} timeslices of audio'.format(key, len(frames), wavefrom.shape))
+    print('Got {} frames of video and {} timeslices of audio'.format(len(frames), wavefrom.shape))
 
     """
     key, frames, wavefrom = training_feed.request_sample()
