@@ -1,6 +1,9 @@
 import cv2
 import dlib
 
+import numpy as np
+import tensorflow as tf
+from face_embedding import InceptionResNetV1
 
 def detect_face(frame_idx, frame):
     detector = dlib.get_frontal_face_detector()
@@ -40,6 +43,8 @@ def clean_frames(speaker_frames, frames):
     for frame_idx, speaker_frame in enumerate(speaker_frames):
         cleaned_speaker = []
 
+        """
+        # The paper claims that this is not needed
         if not speaker_frame:
             if frame_idx == 0:
                 print('ERROR: DISCARD THIS CLIP')
@@ -54,6 +59,7 @@ def clean_frames(speaker_frames, frames):
                 speaker = cv2.resize(speaker, (160, 160))  # Because of Facenet input shape
 
                 speaker_frame.append((speaker, left_x, right_x, top_y, bottom_y))
+        """
 
         for speaker in speaker_frame:
             center_x = (speaker[1] + speaker[2]) * 0.5 / frames[frame_idx].shape[1]
@@ -64,6 +70,24 @@ def clean_frames(speaker_frames, frames):
         cleaned_frames.append(cleaned_speaker)
 
     return cleaned_frames
+
+
+def fetch_embeddings(frames):
+    facenet = InceptionResNetV1(weights_path='pre-trained-models/facenet_weights.h5')
+    get_output = tf.keras.backend.function([facenet.layers[0].input],
+                                           [facenet.get_layer('Dropout').output])  # Should we take from AvgPool instead?
+
+    embeddings = []
+    for frame in frames:
+        if frame:
+            in_speakers = np.array(frame)
+            frame_embeddings = get_output(in_speakers)[0]
+        else:
+            frame_embeddings = np.zeros(shape=(1, 1792), dtype=np.float32) # Because the avg pool from InceptionNet
+
+        embeddings.append(frame_embeddings)
+
+    return np.array(embeddings)
 
 
 def process_video(frames, ground_truth):
@@ -85,7 +109,10 @@ def process_video(frames, ground_truth):
             #                                                                    frame[closest_speaker[1]][2],
             #                                                                    ground_truth[0],
             #                                                                    ground_truth[1]))
-            true_speakers.append([frame[closest_speaker[1]][0]])
+            if closest_speaker[1] >= 0:
+                true_speakers.append([frame[closest_speaker[1]][0]])
+            else:
+                true_speakers.append([])
     else:
         true_speakers = []
         for frame_id, frame in enumerate(cleaned_frames):
@@ -93,4 +120,6 @@ def process_video(frames, ground_truth):
 
             true_speakers.append(speakers_in_frame)
 
-    return true_speakers
+    true_embeddings = fetch_embeddings(true_speakers)
+
+    return true_embeddings

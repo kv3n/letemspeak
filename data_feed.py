@@ -28,6 +28,10 @@ class Feed:
         filename = '{}/{}.mp4'.format(self.feed_dir, speaker_key)
 
         video = VideoFileClip(filename).set_fps(25)
+        start = random.uniform(0.0, video.duration - 3.0)
+        end = start + 3.0
+
+        video = video.subclip(start, end).set_fps(25)
         audio = video.audio.set_fps(16000)
         waveform = audio.to_soundarray()[:, 0]  # We only care about the left channel
 

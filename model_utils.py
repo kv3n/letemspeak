@@ -101,10 +101,10 @@ def power_loss(true_spectrum, prediction_spectrum):
 USE THIS SPACE FOR TESTING ONLY
 """
 def main():
-    video_stream = video_dilation_network(input_shape=(75, 1, 1790))
+    video_stream = video_dilation_network(input_shape=(75, 1, 1792))
     video_stream.summary()
 
-    audio_stream = audio_dilation_network(input_shape=(300, 257, 2))
+    audio_stream = audio_dilation_network(input_shape=(298, 257, 2))
     audio_stream.summary()
 
 

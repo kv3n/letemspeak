@@ -202,7 +202,8 @@ def InceptionResNetV1(input_shape=(160, 160, 3),
 """
 THIS SHOULD BE USED FOR TESTING ONLY
 """
-from data_feed import Feed
+
+#from data_feed import Feed
 import cv2
 import numpy as np
 def main():
@@ -212,6 +213,7 @@ def main():
     get_output = tf.keras.backend.function([facenet.layers[0].input],
                                            [facenet.get_layer('AvgPool').output])
 
+    """
     training_feed = Feed('data/train', filter_ground_truth=True)
     key, frames, wavefrom = training_feed.request_sample()
     print('Got {} frames of video and {} timeslices of audio'.format(len(frames), wavefrom.shape))
@@ -226,6 +228,9 @@ def main():
         print('############ TRUE REP {} #############'.format(rep.shape))
         print(rep)
         break
+    """
+
 
 if __name__ == '__main__':
     main()
+
