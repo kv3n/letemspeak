@@ -37,14 +37,14 @@ class Feed:
 
     def request_sample(self):
         sample_key = self.samples[random.randint(0, len(self.samples)-1)]
-        sample_key = '1yo45HeVCDE_26'
+        # sample_key = '1yo45HeVCDE_26'
         print('Picked Key: {}'.format(sample_key))
 
         frames, wavefrom = self.build_sample(sample_key)
 
         true_speaker_location = self.feed_dict[sample_key] if self.should_filter_ground_truth else None
-        frames = process_video(frames=frames, ground_truth=true_speaker_location)
         wavefrom = process_audio(wavefrom)
+        frames = process_video(frames=frames, ground_truth=true_speaker_location)
 
         return sample_key, frames, wavefrom
 
