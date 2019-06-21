@@ -61,7 +61,8 @@ def video_dilation_network(input_shape):
         create_conv_layer(name='Vid06', filters=256, size=(5, 1), dilation=(16, 1)),
 
         # Upsampling to match audio
-        tf.keras.layers.UpSampling2D(name='VidUpsample', size=(4, 1), interpolation='nearest')
+        tf.keras.layers.UpSampling2D(name='VidUpsample', size=(4, 1), interpolation='nearest'),
+        tf.keras.layers.Cropping2D(cropping=((1, 1), (0, 0)))
     ]
     )
 
