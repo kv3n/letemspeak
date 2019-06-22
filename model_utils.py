@@ -51,9 +51,9 @@ def create_pooling_layer(name, size=2, stride=2, padding='same'):
                                         name=layer_name)
 
 
-def video_dilation_network(input_shape):
+def video_dilation_network():
     video_network = tf.keras.Sequential([
-        create_conv_layer(name='Vid01', filters=256, size=(7, 1), dilation=(1, 1), in_shape=input_shape),
+        create_conv_layer(name='Vid01', filters=256, size=(7, 1), dilation=(1, 1)),
         create_conv_layer(name='Vid02', filters=256, size=(5, 1), dilation=(1, 1)),
         create_conv_layer(name='Vid03', filters=256, size=(5, 1), dilation=(2, 1)),
         create_conv_layer(name='Vid04', filters=256, size=(5, 1), dilation=(4, 1)),
@@ -62,16 +62,18 @@ def video_dilation_network(input_shape):
 
         # Upsampling to match audio
         tf.keras.layers.UpSampling2D(name='VidUpsample', size=(4, 1), interpolation='nearest'),
-        tf.keras.layers.Cropping2D(cropping=((1, 1), (0, 0)))
-    ]
-    )
+        tf.keras.layers.Cropping2D(cropping=((1, 1), (0, 0))),
+
+        tf.keras.layers.Permute((1, 3, 2)),
+        tf.keras.layers.Reshape((298, 256))
+    ])
 
     return video_network
 
 
-def audio_dilation_network(input_shape):
+def audio_dilation_network():
     audio_network = tf.keras.Sequential([
-        create_conv_layer(name='Aud01', filters=96, size=(1, 7), dilation=(1, 1), in_shape=input_shape),
+        create_conv_layer(name='Aud01', filters=96, size=(1, 7), dilation=(1, 1)),
         create_conv_layer(name='Aud02', filters=96, size=(5, 1), dilation=(1, 1)),
         create_conv_layer(name='Aud03', filters=96, size=(5, 5), dilation=(1, 1)),
         create_conv_layer(name='Aud04', filters=96, size=(5, 5), dilation=(2, 1)),
@@ -85,9 +87,12 @@ def audio_dilation_network(input_shape):
         create_conv_layer(name='Aud12', filters=96, size=(5, 5), dilation=(8, 8)),
         create_conv_layer(name='Aud13', filters=96, size=(5, 5), dilation=(16, 16)),
         create_conv_layer(name='Aud14', filters=96, size=(5, 5), dilation=(32, 32)),
-        create_conv_layer(name='Aud15', filters=8, size=(1, 1), dilation=(1, 1))
-    ]
-    )
+        create_conv_layer(name='Aud15', filters=8, size=(1, 1), dilation=(1, 1)),
+
+        tf.keras.layers.Reshape((298, 1, 257 * 8)),  # Line up all elements across the channels,
+        tf.keras.layers.Permute((1, 3, 2)),
+        tf.keras.layers.Reshape((298, 257 * 8))
+    ])
 
     return audio_network
 
@@ -98,15 +103,60 @@ def power_loss(true_spectrum, prediction_spectrum):
 
     return tf.keras.losses.MSE(true_density, prediction_density)
 
+
+def lose_batch(stream):
+    stream_transpose = tf.transpose(stream, (1, 2, 3, 0))
+    stream_reshaped = tf.reshape(stream_transpose, shape=(298, 1, -1))
+
+    return stream_reshaped
+
+
+def stitch_model(inputs):
+    video_stream = video_dilation_network()
+    audio_stream = audio_dilation_network()
+
+    fusion = tf.keras.layers.Concatenate(axis=2)
+    fusion = fusion([video_stream(inputs[0]), audio_stream(inputs[1])])
+
+    bidirectional = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(100))(fusion)
+
+    fc1 = tf.keras.layers.Dense(200)(bidirectional)
+    fc2 = tf.keras.layers.Dense(200)(fc1)
+    fc3 = tf.keras.layers.Dense(298*257*2)(fc2)
+
+    complex_mask = tf.keras.layers.Reshape((298, 257, 2))(fc3)
+
+    final_model = tf.keras.Model(inputs=inputs, outputs=complex_mask)
+    final_model.compile(loss=power_loss,
+                        optimizer='adam',
+                        metrics=['accuracy'])
+
+    return final_model
+
+
+def build_output_functor(model):
+    # with a Sequential model
+    get_output = tf.keras.backend.function([model.layers[0].input],
+                                           [model.layers[-1].output])
+    return get_output
+
 """
 USE THIS SPACE FOR TESTING ONLY
 """
 def main():
-    video_stream = video_dilation_network(input_shape=(75, 1, 1792))
-    video_stream.summary()
+    video_stream = video_dilation_network()
+    video_input = tf.keras.layers.Input(shape=[75, 1, 1792])
 
-    audio_stream = audio_dilation_network(input_shape=(298, 257, 2))
-    audio_stream.summary()
+    audio_stream = audio_dilation_network()
+    audio_input = tf.keras.layers.Input(shape=[298, 257, 2])
+
+    fusion = tf.keras.layers.Concatenate(axis=2)
+    fusion = fusion([lose_batch(video_stream(video_input)), lose_batch(audio_stream(audio_input))])
+
+    model = tf.keras.Model(inputs=[video_input, audio_input], outputs=fusion)
+
+    #model.build()
+    model.summary()
 
 
 if __name__ == '__main__':
