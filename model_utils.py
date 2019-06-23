@@ -98,15 +98,20 @@ def audio_dilation_network():
 
 
 def power_loss(true_spectrum, prediction_spectrum):
-    true_frequency, true_density = welch(true_spectrum)
-    prediction_frequency, prediction_density = welch(prediction_spectrum)
+    true_spectrum = true_spectrum[0]
+    prediction_spectrum = prediction_spectrum[0]
 
-    return tf.keras.losses.MSE(true_density, prediction_density)
+    # true_frequency, true_density = welch(true_spectrum)
+    # prediction_frequency, prediction_density = welch(prediction_spectrum)
+    #return tf.keras.losses.MSE(true_density, prediction_density)
+
+    loss = tf.math.sqrt(tf.nn.l2_loss(prediction_spectrum[:, :, :] - true_spectrum[:, :, :]))
+    return loss
 
 
 def lose_batch(stream):
     stream_transpose = tf.transpose(stream, (1, 2, 3, 0))
-    stream_reshaped = tf.reshape(stream_transpose, shape=(298, 1, -1))
+    stream_reshaped = tf.reshape(stream_transpose, shape=(298, 257, 2))
 
     return stream_reshaped
 
