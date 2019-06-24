@@ -129,10 +129,13 @@ def process_video(frames, ground_truth):
     return true_embeddings
 
 
-def save_val_results(key, start, results):
-    filename = '{}/{}.mp4'.format('data/test', key)
+def save_val_results(key, start, results, data_dir='data/test'):
+    filename = '{}/{}.mp4'.format(data_dir, key)
     video = VideoFileClip(filename).set_fps(25)
-    video = video.subclip(start, start + 3.0).set_fps(25)
 
-    for result in results:
-        build_audio(result)
+    for idx, result in enumerate(results):
+        sub_video = video.subclip(start, start + 3.0)
+        audio = build_audio(result)
+        sub_video.audio = audio
+        sub_video.write_videofile('output/{}_{}_{}.mp4'.format(key, int(round(start)), idx),
+                                  codec="libx264", audio_codec="aac")

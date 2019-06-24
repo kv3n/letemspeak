@@ -1,6 +1,9 @@
 import numpy as np
 import tensorflow as tf
 
+from moviepy.editor import AudioFileClip
+from moviepy.audio.AudioClip import AudioArrayClip
+
 
 def process_audio(waveform):
     processed_waveform = np.copy(waveform)
@@ -19,4 +22,7 @@ def build_audio(spectrogram):
     reconstructed_audio = tf.expand_dims(reconstructed_audio, axis=1)
 
     audio_wav = tf.audio.encode_wav(reconstructed_audio, sample_rate=16000)
-    tf.io.write_file('output/test.wav', audio_wav)
+    tf.io.write_file('output/temp.wav', audio_wav)
+    audio = AudioFileClip('output/temp.wav')
+
+    return audio

@@ -5,7 +5,7 @@ import random
 from moviepy.editor import VideoFileClip
 
 from video_processor import process_video
-from audio_processor import process_audio, build_audio
+from audio_processor import process_audio
 
 
 class Feed:
@@ -48,9 +48,7 @@ class Feed:
 
         true_speaker_location = self.feed_dict[sample_key] if self.should_filter_ground_truth else None
         waveform = process_audio(waveform)
-        embeddings = [] # process_video(frames=frames, ground_truth=true_speaker_location)
-
-        build_audio(waveform)
+        embeddings = process_video(frames=frames, ground_truth=true_speaker_location)
 
         samples = []
         for embedding in embeddings:

@@ -1,7 +1,9 @@
 from data_feed import DatasetIterator
-from model_utils import stitch_model
+from model_utils import stitch_model, build_output_functor
 
 import tensorflow as tf
+
+from video_processor import save_val_results
 
 
 def main():
@@ -9,9 +11,10 @@ def main():
     video_input = tf.keras.layers.Input(shape=[75, 1, 1792])
     audio_input = tf.keras.layers.Input(shape=[298, 257, 2])
     letemspeak_network = stitch_model(inputs=[video_input, audio_input])
+    audio_output = build_output_functor()
 
     # The data
-    data_iter = DatasetIterator(num_validations=1000, val_interval=500)
+    data_iter = DatasetIterator(num_validations=2, val_interval=5)
 
     end_of_training = False
     while not end_of_training:
@@ -31,10 +34,13 @@ def main():
 
             for speaker in test_sample:
                 result = letemspeak_network.test_on_batch([speaker[0], speaker[1]], speaker[1])
-                val_results.append(result)
+                output = audio_output([speaker[0], speaker[1]])[0]
+                val_results.append(output)
 
             print('Ran Validation: ' + str(data_iter.validation_step))
             letemspeak_network.save_weights('output/weight_{}.hd5'.format(data_iter.validation_step))
+
+            save_val_results(test_key, test_start, val_results)
 
 
 if __name__ == '__main__':

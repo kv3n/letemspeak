@@ -1,5 +1,4 @@
 import tensorflow as tf
-from scipy.signal import welch
 
 
 def create_conv_layer(name, filters, dilation=(1, 1), in_shape=None, size=(5, 5), stride=(1, 1), padding='same', activation='relu'):
