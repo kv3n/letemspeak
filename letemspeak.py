@@ -11,7 +11,7 @@ def main():
     video_input = tf.keras.layers.Input(shape=[75, 1, 1792])
     audio_input = tf.keras.layers.Input(shape=[298, 257, 2])
     letemspeak_network = stitch_model(inputs=[video_input, audio_input])
-    audio_output = build_output_functor()
+    audio_output = build_output_functor(letemspeak_network)
 
     # The data
     data_iter = DatasetIterator(num_validations=2, val_interval=5)
@@ -25,7 +25,7 @@ def main():
 
         train_result = letemspeak_network.train_on_batch([train_sample[0][0], train_sample[0][1]], train_sample[0][1])
         run_validation, end_of_training = data_iter.step_train()
-        print('Ran Batch: ' + str(data_iter.global_step))
+        print('Ran Batch: {} -> {}'.format(data_iter.global_step, train_result))
 
         if run_validation:
             val_results = []
