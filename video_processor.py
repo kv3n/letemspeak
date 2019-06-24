@@ -5,6 +5,10 @@ import numpy as np
 import tensorflow as tf
 from face_embedding import InceptionResNetV1
 
+from moviepy.editor import VideoFileClip
+from audio_processor import build_audio
+
+
 def detect_face(frame_idx, frame):
     detector = dlib.get_frontal_face_detector()
     speaker_detections = detector(frame, 1)
@@ -123,3 +127,12 @@ def process_video(frames, ground_truth):
     true_embeddings = fetch_embeddings(true_speakers)
 
     return true_embeddings
+
+
+def save_val_results(key, start, results):
+    filename = '{}/{}.mp4'.format('data/test', key)
+    video = VideoFileClip(filename).set_fps(25)
+    video = video.subclip(start, start + 3.0).set_fps(25)
+
+    for result in results:
+        build_audio(result)

@@ -5,7 +5,7 @@ import random
 from moviepy.editor import VideoFileClip
 
 from video_processor import process_video
-from audio_processor import process_audio
+from audio_processor import process_audio, build_audio
 
 
 class Feed:
@@ -37,20 +37,54 @@ class Feed:
 
         frames = [frame for frame in video.iter_frames(with_times=False)]
 
-        return frames, waveform
+        return start, frames, waveform
 
     def request_sample(self):
         sample_key = self.samples[random.randint(0, len(self.samples)-1)]
         # sample_key = '1yo45HeVCDE_26'
-        print('Picked Key: {}'.format(sample_key))
+        start, frames, waveform = self.build_sample(sample_key)
 
-        frames, wavefrom = self.build_sample(sample_key)
+        print('Picked Key: {} at start {}'.format(sample_key, start))
 
         true_speaker_location = self.feed_dict[sample_key] if self.should_filter_ground_truth else None
-        wavefrom = process_audio(wavefrom)
-        frames = process_video(frames=frames, ground_truth=true_speaker_location)
+        waveform = process_audio(waveform)
+        embeddings = [] # process_video(frames=frames, ground_truth=true_speaker_location)
 
-        return sample_key, frames, wavefrom
+        build_audio(waveform)
+
+        samples = []
+        for embedding in embeddings:
+            samples.append((embedding, waveform))
+
+        return sample_key, start, samples
+
+
+class DatasetIterator:
+    def __init__(self, num_validations=1000, val_interval=500):
+        self.training_feed = Feed('data/train', filter_ground_truth=True)
+        self.testing_feed = Feed('data/test', filter_ground_truth=False)
+
+        self.global_step = 0
+        self.validation_step = 0
+
+        self.total_iterations = num_validations * val_interval
+        self.val_interval = val_interval
+
+    def get_batch_feed(self, data_type):
+        if data_type == 1:
+            return self.training_feed.request_sample()
+        else:
+            return self.testing_feed.request_sample()
+
+    def step_train(self):
+        self.global_step += 1
+        self.validation_step = self.global_step // self.val_interval
+
+        run_validation = (self.global_step % self.val_interval == 0)
+        end_of_training = (self.global_step == self.total_iterations)
+
+        return run_validation, end_of_training
+
 
 
 """
@@ -59,10 +93,9 @@ THIS SHOULD BE USED FOR TESTING ONLY
 def main():
     """ Main method """
     training_feed = Feed('data/train', filter_ground_truth=True)
-    testing_feed = Feed('data/test', filter_ground_truth=False)
+    #testing_feed = Feed('data/test', filter_ground_truth=False)
 
-    key, frames, wavefrom = training_feed.request_sample()
-    print('Got {} frames of video and {} timeslices of audio'.format(len(frames), wavefrom.shape))
+    key, start, sample = training_feed.request_sample()
 
     """
     key, frames, wavefrom = training_feed.request_sample()
