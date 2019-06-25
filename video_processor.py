@@ -132,8 +132,12 @@ def save_val_results(key, start, results, data_dir='data/test'):
 
     for idx, result in enumerate(results):
         result = np.squeeze(result, axis=0)
+
+        # Extract clip and original audio
         sub_video = video.subclip(start, start + 3.0)
-        audio = build_audio(result)
-        sub_video.audio = audio
+        original_audio = sub_video.audio.set_fps(16000).to_soundarray()[:, 0]
+
+        # Replace Audio with masked audio
+        sub_video.audio = build_audio(result, original_audio)
         sub_video.write_videofile('output/{}_{}_{}.mp4'.format(key, int(round(start)), idx),
                                   codec="libx264", audio_codec="aac")
