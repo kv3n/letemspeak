@@ -1,12 +1,16 @@
-from data_feed import DatasetIterator
-from model_utils import stitch_model, build_output_functor
+import time
 
 import tensorflow as tf
 
+from data_feed import DatasetIterator
+from model_utils import stitch_model, build_output_functor
 from video_processor import save_val_results
 
 
 def main():
+    # Logging and Output setup
+    output_dir = 'run_{}'.format(time.time())
+
     # The model
     video_input = tf.keras.layers.Input(shape=[75, 1, 1792])
     audio_input = tf.keras.layers.Input(shape=[298, 257, 2])
@@ -40,7 +44,7 @@ def main():
             print('Ran Validation: ' + str(data_iter.validation_step))
             letemspeak_network.save_weights('output/weight_{}.hd5'.format(data_iter.validation_step))
 
-            save_val_results(test_key, test_start, val_results)
+            save_val_results(test_key, test_start, val_results, output_dir=output_dir)
 
 
 if __name__ == '__main__':

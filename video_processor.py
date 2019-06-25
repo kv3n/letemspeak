@@ -1,12 +1,13 @@
+import os
+
 import cv2
 import dlib
-
 import numpy as np
 import tensorflow as tf
-from face_embedding import InceptionResNetV1
-
 from moviepy.editor import VideoFileClip
 from audio_processor import build_audio
+
+from face_embedding import InceptionResNetV1
 
 
 def find_speaker_id(x, y, speakers):
@@ -126,7 +127,11 @@ def process_video(frames, ground_truth):
     return embeddings
 
 
-def save_val_results(key, start, results, data_dir='data/test'):
+def save_val_results(key, start, results, output_dir='', data_dir='data/test'):
+
+    if not os.path.exists('output/{}'.format(output_dir)):
+        os.mkdir('output/{}'.format(output_dir))
+
     filename = '{}/{}.mp4'.format(data_dir, key)
     video = VideoFileClip(filename).set_fps(25)
 
@@ -139,5 +144,5 @@ def save_val_results(key, start, results, data_dir='data/test'):
 
         # Replace Audio with masked audio
         sub_video.audio = build_audio(result, original_audio)
-        sub_video.write_videofile('output/{}_{}_{}.mp4'.format(key, int(round(start)), idx),
+        sub_video.write_videofile('output/{}/{}_{}_{}.mp4'.format(output_dir, key, int(round(start)), idx),
                                   codec="libx264", audio_codec="aac")

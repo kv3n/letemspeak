@@ -20,6 +20,7 @@ def prep_directory():
     make_dir('data/train')
     make_dir('data/test')
     make_dir('output')
+    make_dir('logs')
 
 
 def download_data(filename, output_dir, limit=0):

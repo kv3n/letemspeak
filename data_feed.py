@@ -1,8 +1,8 @@
-import numpy as np
 import json
 import random
 import math
 
+import numpy as np
 from moviepy.editor import VideoFileClip
 
 from video_processor import process_video

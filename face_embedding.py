@@ -1,4 +1,5 @@
 from functools import partial
+
 import tensorflow as tf
 
 
