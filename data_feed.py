@@ -1,6 +1,7 @@
 import numpy as np
 import json
 import random
+import math
 
 from moviepy.editor import VideoFileClip
 
@@ -28,7 +29,8 @@ class Feed:
         filename = '{}/{}.mp4'.format(self.feed_dir, speaker_key)
 
         video = VideoFileClip(filename).set_fps(25)
-        start = random.uniform(0.0, video.duration - 3.0)
+        start = math.floor(random.uniform(0.0, video.duration - 3.0))
+        start = 0.0
         end = start + 3.0
 
         video = video.subclip(start, end).set_fps(25)
@@ -37,11 +39,15 @@ class Feed:
 
         frames = [frame for frame in video.iter_frames(with_times=False)]
 
+        assert(len(frames) == 75)
+
         return start, frames, waveform
 
     def request_sample(self):
         sample_key = self.samples[random.randint(0, len(self.samples)-1)]
         # sample_key = '1yo45HeVCDE_26'
+        # sample_key = '1yo45HeVCDE_17'
+        # sample_key = 'tNdxD5kcvjU_0'
         start, frames, waveform = self.build_sample(sample_key)
 
         print('Picked Key: {} at start {}'.format(sample_key, start))
@@ -51,8 +57,9 @@ class Feed:
         embeddings = process_video(frames=frames, ground_truth=true_speaker_location)
 
         samples = []
-        for embedding in embeddings:
-            samples.append((embedding, waveform))
+        if embeddings is not None:
+            for embedding in embeddings:
+                samples.append((np.expand_dims(embedding, axis=0), np.expand_dims(waveform, axis=0)))
 
         return sample_key, start, samples
 
@@ -70,9 +77,15 @@ class DatasetIterator:
 
     def get_batch_feed(self, data_type):
         if data_type == 1:
-            return self.training_feed.request_sample()
+            sample_key, start, samples = self.training_feed.request_sample()
+            while not samples:
+                sample_key, start, samples = self.training_feed.request_sample()
         else:
-            return self.testing_feed.request_sample()
+            sample_key, start, samples = self.testing_feed.request_sample()
+            while not samples:
+                sample_key, start, samples = self.testing_feed.request_sample()
+
+        return sample_key, start, samples
 
     def step_train(self):
         self.global_step += 1
