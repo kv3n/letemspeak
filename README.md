@@ -6,14 +6,16 @@ Audio Isolation of speakers from a debate of speakers.
 ### Prerequisites
 Python 3.6.7 and download required dependencies from the requirements.txt.
 
-### Download Dataset
-Download train and test files from [here](https://looking-to-listen.github.io/avspeech/download.html) and place them in the project root directory.
+### Download Dataset and Pre-Trained Facenet Model
+We downloaded the training and test files from [here](https://looking-to-listen.github.io/avspeech/download.html) and put them in our google drive.
 
-### Dowload Pre-trained Facenet Model
-Create a directory called pre-trained-models and do the following in terminal
+So from the project root directory run the following commands to download the training and test files as well as the pre-trained facenet weights.
 
 ```
-cd pre-trained-models.
+wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=1sTHFmc9tl7Kxw-aUnEfZn-X00Eg-73Q5'
+wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=1xbSBR-nq15VhvW5ufT4WnzYC2HciBzaE'
+mkdir pre-trained-models
+cd pre-trained-models
 wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=12YXsDiPSxpzXP4m2yGiWMXXTMnH8lzwg'
 ```
 
