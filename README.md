@@ -23,7 +23,7 @@ We downloaded the training and test files from [here](https://looking-to-listen.
 So from the project root directory run the following commands to download the training and test files as well as the pre-trained facenet weights.
 
 ```
-wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=1sTHFmc9tl7Kxw-aUnEfZn-X00Eg-73Q5' -O 'avspeech_train.csv'
+wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=1LKJ636BYEkjlTR4csrJp1Vq1YK1hshS9' -O 'avspeech_train.csv'
 wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=1xbSBR-nq15VhvW5ufT4WnzYC2HciBzaE' -O 'avspeech_test.csv'
 mkdir pre-trained-models
 cd pre-trained-models
