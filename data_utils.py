@@ -82,8 +82,8 @@ def main():
     if not os.path.exists('avspeech_train.csv') or not os.path.exists('avspeech_test.csv'):
         print('No training and Testing data found')
     else:
-        download_data(filename='avspeech_train.csv', output_dir='data/train', limit=10)
-        download_data(filename='avspeech_test.csv', output_dir='data/test', limit=2)
+        download_data(filename='avspeech_train.csv', output_dir='data/train', limit=0)
+        download_data(filename='avspeech_test.csv', output_dir='data/test', limit=0)
 
 
 if __name__ == "__main__":

@@ -30,7 +30,6 @@ class Feed:
 
         video = VideoFileClip(filename).set_fps(25)
         start = math.floor(random.uniform(0.0, video.duration - 3.0))
-        start = 0.0
         end = start + 3.0
 
         video = video.subclip(start, end).set_fps(25)
