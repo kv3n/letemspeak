@@ -3,7 +3,6 @@
 venv/
 data/
 output/
-pre-trained-models/
 *.DS_Store
 *avspeech_*.csv
 
