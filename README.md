@@ -26,6 +26,7 @@ cd letemspeak
 py -m venv venv  # create virtual environment
 source venv/bin/activate
 pip install --upgrade pip # make sure you have the latest version of pip
+sudo apt-get -y install cmake  # Install cmake for dlib
 pip install -r requirements.txt
 ```
 
