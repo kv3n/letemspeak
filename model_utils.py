@@ -1,5 +1,7 @@
 import tensorflow as tf
 
+from audio_processor import break_complex_spectrogram, apply_mask
+
 
 def create_conv_layer(name, filters, dilation=(1, 1), in_shape=None, size=(5, 5), stride=(1, 1), padding='same', activation='relu'):
     layer_name = 'Conv' + str(name)  # + '-' + str(size) + 'x' + str(size) + 'x' + str(filters) + '-' + str(stride)
@@ -96,15 +98,13 @@ def audio_dilation_network():
     return audio_network
 
 
-def power_loss(true_spectrum, prediction_spectrum):
-    true_spectrum = true_spectrum[0]
-    prediction_spectrum = prediction_spectrum[0]
+def power_loss(true_spectrogram, mask_spectrogram):
+    true_spectrogram = true_spectrogram[0]
+    mask_spectrogram = mask_spectrogram[0]
 
-    # true_frequency, true_density = welch(true_spectrum)
-    # prediction_frequency, prediction_density = welch(prediction_spectrum)
-    #return tf.keras.losses.MSE(true_density, prediction_density)
+    reconstructed_spectrogram = break_complex_spectrogram(apply_mask(true_spectrogram, mask_spectrogram))
 
-    loss = tf.math.sqrt(tf.nn.l2_loss(prediction_spectrum[:, :, :] - true_spectrum[:, :, :]))
+    loss = tf.math.sqrt(tf.nn.l2_loss(reconstructed_spectrogram[:, :, :] - true_spectrogram[:, :, :]))
     return loss
 
 
