@@ -9,6 +9,14 @@ Python 3.6.7 and download required dependencies from the requirements.txt.
 ### Download Dataset
 Download train and test files from [here](https://looking-to-listen.github.io/avspeech/download.html) and place them in the project root directory.
 
+### Dowload Pre-trained Facenet Model
+Create a directory called pre-trained-models and do the following in terminal
+
+```
+cd pre-trained-models.
+wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=12YXsDiPSxpzXP4m2yGiWMXXTMnH8lzwg'
+```
+
 ### Installation
 ```
 git clone https://github.com/kv3n/letemspeak.git
