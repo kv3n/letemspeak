@@ -66,7 +66,7 @@ def download_data(filename, output_dir, limit=0):
     meta_data, used_clips = build_meta(output_dir, clip_dictionary)
 
     if limit:
-        limit = limit - len(used_clips)
+        limit = max(limit - len(used_clips), 0)
         limited_keys = random.sample(list(set(list(clip_dictionary.keys())) - used_clips), limit)
         clip_dictionary = {key: clip_dictionary[key] for key in limited_keys}
 
@@ -118,7 +118,7 @@ def main():
     if not os.path.exists('avspeech_train.csv') or not os.path.exists('avspeech_test.csv'):
         print('No training and Testing data found')
     else:
-        download_data(filename='avspeech_train.csv', output_dir='data/train', limit=100)
+        download_data(filename='avspeech_train.csv', output_dir='data/train', limit=500)
         download_data(filename='avspeech_test.csv', output_dir='data/test', limit=10)
 
 
