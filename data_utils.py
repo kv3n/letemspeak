@@ -68,7 +68,10 @@ def download_data(filename, output_dir, limit=0):
         limited_keys = random.sample(list(set(list(clip_dictionary.keys())) - used_clips), limit)
         clip_dictionary = {key: clip_dictionary[key] for key in limited_keys}
 
+    items_to_download = len(clip_dictionary)
     for clip_id, params in clip_dictionary.items():
+        print('[IMP] {} / {} downloading ...'.format(clip_id+1, items_to_download))
+
         download_opts = {
             'format': 'mp4',
             'outtmpl': 'data/{}.mp4'.format(clip_id),
