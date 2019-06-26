@@ -33,7 +33,6 @@ def build_meta(output_dir, clip_dictionary):
     sample_in_directory = set([sample[:-4] for sample in dir_samples if not sample == 'meta.json'])
     samples_not_in_meta = sample_in_directory - samples_in_meta
 
-    used_clips = set()
     for sample in samples_not_in_meta:
         sample_split = sample.split('_')
         clip_key = '_'.join(sample_split[0:-1])
@@ -41,6 +40,9 @@ def build_meta(output_dir, clip_dictionary):
         params = clip_dictionary[clip_key][param_key]
         meta_data[sample] = (params[2], params[3])
 
+    used_clips = set()
+    for clip_id, _ in meta_data.items():
+        clip_key = '_'.join(clip_id.split('_')[0:-1])
         used_clips.add(clip_key)
 
     with open('{}/meta.json'.format(output_dir), 'w') as fp:
