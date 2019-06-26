@@ -1,4 +1,6 @@
 import time
+import os
+import json
 
 import tensorflow as tf
 
@@ -13,6 +15,19 @@ def commit_to_log(log, results, step):
         tf.summary.scalar('accuracy', results[1], step=step)
 
 
+def load_model_weights(model):
+    if os.path.exists('output/weights.h5'):
+        model.load_weights('output/weights.h5')
+
+    accuracy = 0.0
+    if os.path.exists('output/meta.json'):
+        with open('output/meta.json', 'r') as fp:
+            model_meta = json.load(fp)
+            accuracy = model_meta['accuracy']
+
+    return accuracy
+
+
 def main():
     # Logging and Output setup
     run_time = time.time()
@@ -25,6 +40,8 @@ def main():
     audio_input = tf.keras.layers.Input(shape=[298, 257, 2])
     letemspeak_network = stitch_model(inputs=[video_input, audio_input])
     audio_output = build_output_functor(letemspeak_network)
+
+    model_accuracy = load_model_weights(letemspeak_network)
 
     # The data
     data_iter = DatasetIterator(num_validations=500, val_interval=1000)
@@ -66,7 +83,18 @@ def main():
             commit_to_log(validation_log, val_results, data_iter.validation_step-1)
 
             print('Ran Validation: ' + str(data_iter.validation_step))
-            letemspeak_network.save_weights('output/weight_{}.hd5'.format(data_iter.validation_step))
+
+            if val_results[1] > model_accuracy:
+                model_accuracy = val_results[1]
+                letemspeak_network.save_weights('output/weights.h5')
+                model_meta = {
+                    'accuracy': val_results[1],
+                    'loss': val_results[0],
+                    'file_loc': 'output/weights.h5'
+                }
+
+                with open('output/meta.json', 'w') as fp:
+                    fp.write(json.dumps(model_meta))
 
             save_val_results(test_key, test_start, val_outputs, output_dir=output_dir)
 
