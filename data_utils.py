@@ -2,7 +2,6 @@ import youtube_dl
 from moviepy.editor import VideoFileClip
 
 import os
-import shutil
 import csv
 import random
 import json
@@ -10,17 +9,44 @@ import json
 
 def prep_directory():
     def make_dir(dir_name):
-        if os.path.exists(dir_name):
-            os.rename(dir_name, dir_name + '_backup')
-            shutil.rmtree(dir_name + '_backup')
-
-        os.mkdir(dir_name)
+        if not os.path.exists(dir_name):
+            os.mkdir(dir_name)
 
     make_dir('data')
     make_dir('data/train')
     make_dir('data/test')
     make_dir('output')
     make_dir('logs')
+
+
+def build_meta(output_dir, clip_dictionary):
+    meta_file = '{}/meta.json'.format(output_dir)
+
+    samples_in_meta = set()
+    meta_data = dict()
+    if os.path.exists(meta_file):
+        with open('{}/meta.json'.format(output_dir), 'r') as fp:
+            meta_data = json.load(fp)
+            samples_in_meta = set(list(meta_data.keys()))
+
+    dir_samples = os.listdir(output_dir)
+    sample_in_directory = set([sample[:-4] for sample in dir_samples if not sample == 'meta.json'])
+    samples_not_in_meta = sample_in_directory - samples_in_meta
+
+    used_clips = set()
+    for sample in samples_not_in_meta:
+        sample_split = sample.split('_')
+        clip_key = '_'.join(sample_split[0:-1])
+        param_key = int(sample_split[-1])
+        params = clip_dictionary[clip_key][param_key]
+        meta_data[sample] = (params[2], params[3])
+
+        used_clips.add(clip_key)
+
+    with open('{}/meta.json'.format(output_dir), 'w') as fp:
+        fp.write(json.dumps(meta_data))
+
+    return meta_data, used_clips
 
 
 def download_data(filename, output_dir, limit=0):
@@ -35,11 +61,13 @@ def download_data(filename, output_dir, limit=0):
 
             clip_dictionary[row[0]].append((float(row[1]), float(row[2]), float(row[3]), float(row[4])))
 
+    meta_data, used_clips = build_meta(output_dir, clip_dictionary)
+
     if limit:
-        limited_keys = random.sample(list(clip_dictionary.keys()), limit)
+        limit = limit - len(used_clips)
+        limited_keys = random.sample(list(set(list(clip_dictionary.keys())) - used_clips), limit)
         clip_dictionary = {key: clip_dictionary[key] for key in limited_keys}
 
-    meta_data = {}
     for clip_id, params in clip_dictionary.items():
         download_opts = {
             'format': 'mp4',
