@@ -69,8 +69,11 @@ def download_data(filename, output_dir, limit=0):
         clip_dictionary = {key: clip_dictionary[key] for key in limited_keys}
 
     items_to_download = len(clip_dictionary)
+    downloading = 0
     for clip_id, params in clip_dictionary.items():
-        print('[IMP] {} of {} downloading ...'.format((clip_id+1), items_to_download))
+        downloading += 1
+        print(
+            '[IMP] Downloading {} of {}'.format(downloading, items_to_download))
 
         download_opts = {
             'format': 'mp4',
