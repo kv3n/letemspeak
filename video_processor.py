@@ -1,4 +1,5 @@
 import os
+import itertools
 
 import cv2
 import dlib
@@ -29,10 +30,11 @@ def detect_face(frames):
 
     for frame_idx, frame in enumerate(frames):
         detector = dlib.get_frontal_face_detector()
-        speaker_detections = detector(frame, 2)
+        speaker_detections = detector(frame, 1)
 
+        print('#{} -> speaker count: {}'.format(frame_idx, len(speaker_detections)))
+        speakers_in_frame = dict()
         if speaker_detections:
-            used_speakers = set()
             for i, d in enumerate(speaker_detections):
                 left_x = d.left()
                 right_x = d.right() + 1
@@ -45,44 +47,67 @@ def detect_face(frames):
                 avg_x = (left_x * 0.5 + right_x * 0.5) / frame.shape[1]
                 avg_y = (top_y * 0.5 + bottom_y * 0.5) / frame.shape[0]
 
-                speaker_id = i
-                if i not in speakers:
-                    assert (speaker_id not in used_speakers)
+                speakers_in_frame[i] = {
+                    'frames': speaker,
+                    'x': avg_x,
+                    'y': avg_y
+                }
 
-                    # Create frame_idx number of empty detection frames
-                    speakers[i] = {
-                        'frames': [np.zeros(shape=(160, 160, 3)) for _ in range(frame_idx)],
-                        'x': avg_x,
-                        'y': avg_y
-                    }
-                else:
-                    speaker_id = find_speaker_id(avg_x, avg_y, speakers)
-                    assert(speaker_id not in used_speakers)
+        # Sync Speakers
+        while len(speakers) < len(speakers_in_frame):
+            speakers[len(speakers)] = {
+                'frames': [np.zeros(shape=(160, 160, 3), dtype=np.uint8) for _ in range(frame_idx)],
+                'x': -1.0,
+                'y': -1.0
+            }
 
-                used_speakers.add(speaker_id)
+        # Find true assignment for speakers.
+        possible_assignments = itertools.product(speakers_in_frame.keys(), speakers.keys())
 
-                speakers[speaker_id]['frames'].append(speaker)
+        def distance(active_speaker_key, speaker_key):
+            diff_x = speakers_in_frame[active_speaker_key]['x'] - speakers[speaker_key]['x']
+            diff_y = speakers_in_frame[active_speaker_key]['y'] - speakers[speaker_key]['y']
+            return diff_x ** 2 + diff_y ** 2
 
-            unused_speakers = set(speakers.keys()) - used_speakers
-            for speaker_id in unused_speakers:
-                speakers[speaker_id]['frames'].append(np.zeros(shape=(160, 160, 3)))
-        else:
-            for speaker_id, speaker in speakers.items():
-                speaker['frames'].append(np.zeros(shape=(160, 160, 3)))
+        distances = [(distance(active_speaker_key, speaker_key), active_speaker_key, speaker_key)
+                     for active_speaker_key, speaker_key in possible_assignments]
+
+        distances.sort()
+
+        assignment_from = set()
+        assignment_to = set()
+        for _, active_speaker_key, speaker_key in distances:
+            if active_speaker_key in assignment_from or speaker_key in assignment_to:
+                continue
+
+            cur_x = speakers[speaker_key]['x']
+            new_x = speakers_in_frame[active_speaker_key]['x']
+            cur_y = speakers[speaker_key]['y']
+            new_y = speakers_in_frame[active_speaker_key]['y']
+
+            speakers[speaker_key]['frames'].append(speakers_in_frame[active_speaker_key]['frames'])
+            speakers[speaker_key]['x'] = new_x if cur_x < 0.0 else cur_x
+            speakers[speaker_key]['y'] = new_y if cur_y < 0.0 else cur_y
+
+            assignment_from.add(active_speaker_key)
+            assignment_to.add(speaker_key)
+
+
+        # Fill in frames for unused speakers
+        unused_speakers = set(speakers.keys()) - assignment_to
+        for speaker_id in unused_speakers:
+            speakers[speaker_id]['frames'].append(np.zeros(shape=(160, 160, 3), dtype=np.uint8))
+
 
         # Uncomment the following only for DEBUGGING
-        # print('#{} -> speaker count: {}'.format(frame_idx, len(speakers)))
-        # cv_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        # cv2.imshow('Input', cv_frame)
-        # for speaker_idx, speaker in enumerate(speakers):
-        #     cv_speaker_frame = cv2.cvtColor(speaker[0], cv2.COLOR_RGB2BGR)
-        #     cv2.imshow('Speaker #{}'.format(speaker_idx+1), cv_speaker_frame)
-        #     print('Frame #{}, Speaker #{} at {}, {}'.format(frame_idx, speaker_idx+1, speaker[1], speaker[2]))
-        # if frame_idx == 57:
-        #     cv2.waitKey()
-        # else:
-        #     cv2.waitKey(5)
-        # cv2.destroyAllWindows()
+        cv_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        cv2.imshow('Input', cv_frame)
+        for speaker_key, speaker in speakers.items():
+            cv_speaker_frame = cv2.cvtColor(speaker['frames'][frame_idx], cv2.COLOR_RGB2BGR)
+            cv2.imshow('Speaker #{} @ #{}'.format(speaker_key, frame_idx), cv_speaker_frame)
+            print('Frame #{}, Speaker #{} at {}, {}'.format(frame_idx, speaker_key, speaker['x'], speaker['y']))
+        cv2.waitKey()
+        cv2.destroyAllWindows()
 
     return speakers
 

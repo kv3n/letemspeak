@@ -30,6 +30,7 @@ class Feed:
 
         video = VideoFileClip(filename).set_fps(25)
         start = math.floor(random.uniform(0.0, video.duration - 3.0))
+        start = 2.0
         end = start + 3.0
 
         video = video.subclip(start, end).set_fps(25)
@@ -47,6 +48,7 @@ class Feed:
         # sample_key = '1yo45HeVCDE_26'
         # sample_key = '1yo45HeVCDE_17'
         # sample_key = 'tNdxD5kcvjU_0'
+        sample_key = '2n7upXwH8pc_0'
         start, frames, waveform = self.build_sample(sample_key)
 
         print('Picked Key: {} at start {}'.format(sample_key, start))
