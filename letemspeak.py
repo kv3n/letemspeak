@@ -36,8 +36,8 @@ def main():
     validation_log = tf.summary.create_file_writer('logs/{}_val/'.format(run_time))
 
     # The model
-    video_input = tf.keras.layers.Input(shape=[75, 1, 1792])
-    audio_input = tf.keras.layers.Input(shape=[298, 257, 2])
+    video_input = tf.keras.layers.Input(shape=[134400])
+    audio_input = tf.keras.layers.Input(shape=[153172])
     letemspeak_network = stitch_model(inputs=[video_input, audio_input])
     audio_output = build_output_functor(letemspeak_network)
 
