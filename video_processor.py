@@ -115,7 +115,7 @@ def detect_face(frames):
 def fetch_embeddings(speakers):
     facenet = InceptionResNetV1(weights_path='pre-trained-models/facenet_weights.h5')
     get_output = tf.keras.backend.function([facenet.layers[0].input],
-                                           [facenet.get_layer('Dropout').output])  # Should we take from AvgPool instead?
+                                           [facenet.get_layer('Dropout').output])  # Should we use AvgPool instead?
 
     embeddings = []
     for speaker_frames in speakers:
@@ -125,7 +125,7 @@ def fetch_embeddings(speakers):
                 in_speakers = np.array([frame])
                 frame_embeddings = get_output(in_speakers)[0]
             else:
-                frame_embeddings = np.zeros(shape=(1, 1792), dtype=np.float32) # Because the avg pool from InceptionNet
+                frame_embeddings = np.zeros(shape=(1, 1792), dtype=np.float32)  # Because the avg pool from InceptionNet
             speaker_embeddings.append(frame_embeddings)
 
         embeddings.append(np.array(speaker_embeddings))
