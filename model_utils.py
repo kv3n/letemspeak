@@ -101,8 +101,8 @@ def audio_dilation_network():
 
 
 def power_loss(true_spectrogram, mask_spectrogram):
-    true_spectrogram = true_spectrogram[0]
-    mask_spectrogram = mask_spectrogram[0]
+    true_spectrogram = tf.reshape(true_spectrogram, (-1, 298, 257, 2))
+    mask_spectrogram = tf.reshape(mask_spectrogram, (-1, 298, 257, 2))
 
     reconstructed_spectrogram = break_complex_spectrogram(apply_mask(true_spectrogram, mask_spectrogram))
 
@@ -110,19 +110,15 @@ def power_loss(true_spectrogram, mask_spectrogram):
     return loss
 
 
-def lose_batch(stream):
-    stream_transpose = tf.transpose(stream, (1, 2, 3, 0))
-    stream_reshaped = tf.reshape(stream_transpose, shape=(298, 257, 2))
+def stitch_model():
+    video_input = tf.keras.layers.Input(shape=[134400])
+    audio_input = tf.keras.layers.Input(shape=[153172])
 
-    return stream_reshaped
-
-
-def stitch_model(inputs):
     video_stream = video_dilation_network()
     audio_stream = audio_dilation_network()
 
     fusion = tf.keras.layers.Concatenate(axis=2)
-    fusion = fusion([video_stream(inputs[0]), audio_stream(inputs[1])])
+    fusion = fusion([video_stream(video_input), audio_stream(audio_input)])
 
     bidirectional = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(100))(fusion)
 
@@ -130,9 +126,7 @@ def stitch_model(inputs):
     fc2 = tf.keras.layers.Dense(200)(fc1)
     fc3 = tf.keras.layers.Dense(298*257*2)(fc2)
 
-    complex_mask = tf.keras.layers.Reshape((298, 257, 2))(fc3)
-
-    final_model = tf.keras.Model(inputs=inputs, outputs=complex_mask)
+    final_model = tf.keras.Model(inputs=[video_input, audio_input], outputs=fc3)
     final_model.compile(loss=power_loss,
                         optimizer='adam',
                         metrics=['accuracy'])
@@ -150,20 +144,7 @@ def build_output_functor(model):
 USE THIS SPACE FOR TESTING ONLY
 """
 def main():
-    video_stream = video_dilation_network()
-    video_input = tf.keras.layers.Input(shape=[134400])
-
-    audio_stream = audio_dilation_network()
-    audio_input = tf.keras.layers.Input(shape=[153172])
-
-    fusion = tf.keras.layers.Concatenate(axis=2)
-    fusion = fusion([lose_batch(video_stream(video_input)), lose_batch(audio_stream(audio_input))])
-
-    model = tf.keras.Model(inputs=[video_input, audio_input], outputs=fusion)
-
-    #model.build()
-    model.summary()
-
+    print("Testing only")
 
 if __name__ == '__main__':
     main()

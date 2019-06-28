@@ -31,7 +31,7 @@ def build_sample_slices(feed_dir, speaker_key):
         sample_audio_slices.append(waveform)
 
         video.close()
-        end += 3.0
+        end += 1.0
 
     return sample_video_slices, sample_audio_slices
 

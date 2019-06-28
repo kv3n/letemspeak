@@ -33,10 +33,10 @@ def is_complex(tensor):
 
 def apply_mask(spectrogram, mask):
     if not is_complex(spectrogram):
-        spectrogram = tf.dtypes.complex(spectrogram[:, :, 0], spectrogram[:, :, 1])
+        spectrogram = tf.dtypes.complex(spectrogram[:, :, :, 0], spectrogram[:, :, :, 1])
 
     if not is_complex(mask):
-        mask = tf.dtypes.complex(mask[:, :, 0], mask[:, :, 1])
+        mask = tf.dtypes.complex(mask[:, :, :, 0], mask[:, :, :, 1])
 
     masked_audio = tf.math.multiply(spectrogram, mask)
 
