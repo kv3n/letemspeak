@@ -111,9 +111,11 @@ def iter_samples(data_dir, should_filter_ground_truth):
 
 
 def main():
+    remake_meta('data/train', 'avspeech_train.csv')
     print('Prepping Training Data')
     iter_samples('data/train', should_filter_ground_truth=True)
 
+    # remake_meta('data/test', 'avspeech_test.csv')
     # print('Prepping Testing Data')
     # iter_samples('data/test', should_filter_ground_truth=True)
 
