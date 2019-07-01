@@ -36,10 +36,12 @@ def detect_face(frames):
         speakers_in_frame = dict()
         if speaker_detections:
             for i, d in enumerate(speaker_detections):
-                left_x = d.left()
+                left_x = max(d.left(), 0)
                 right_x = d.right() + 1
-                top_y = d.top()
+                top_y = max(d.top(), 0)
                 bottom_y = d.bottom() + 1
+
+                assert ((left_x < right_x - 1) and (top_y < bottom_y - 1))
 
                 speaker = frame[top_y:bottom_y, left_x:right_x, :]
                 speaker = cv2.resize(speaker, (160, 160))  # Because of Facenet input shape
@@ -100,14 +102,14 @@ def detect_face(frames):
 
 
         # Uncomment the following only for DEBUGGING
-        # cv_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        # cv2.imshow('Input', cv_frame)
-        # for speaker_key, speaker in speakers.items():
-        #     cv_speaker_frame = cv2.cvtColor(speaker['frames'][frame_idx], cv2.COLOR_RGB2BGR)
-        #     cv2.imshow('Speaker #{} @ #{}'.format(speaker_key, frame_idx), cv_speaker_frame)
-        #     print('Frame #{}, Speaker #{} at {}, {}'.format(frame_idx, speaker_key, speaker['x'], speaker['y']))
-        # cv2.waitKey()
-        # cv2.destroyAllWindows()
+        cv_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        cv2.imshow('Input', cv_frame)
+        for speaker_key, speaker in speakers.items():
+            cv_speaker_frame = cv2.cvtColor(speaker['frames'][frame_idx], cv2.COLOR_RGB2BGR)
+            cv2.imshow('Speaker #{} @ #{}'.format(speaker_key, frame_idx), cv_speaker_frame)
+            print('Frame #{}, Speaker #{} at {}, {}'.format(frame_idx, speaker_key, speaker['x'], speaker['y']))
+        cv2.waitKey(5)
+        cv2.destroyAllWindows()
 
     return speakers
 

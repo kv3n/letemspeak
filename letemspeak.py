@@ -40,8 +40,8 @@ def main():
     letemspeak_network = stitch_model()
     model_accuracy = load_model_weights(letemspeak_network)
 
-    video_input_slices = np.loadtxt('data/train/x1.csv', dtype=np.float32, delimiter=',')
-    audio_input_slices = np.loadtxt('data/train/x2.csv', dtype=np.float32, delimiter=',')
+    video_input_slices = np.loadtxt('data/train/video.csv', dtype=np.float32, delimiter=',')
+    audio_input_slices = np.loadtxt('data/train/audio.csv', dtype=np.float32, delimiter=',')
 
     letemspeak_network.fit([video_input_slices, audio_input_slices], audio_input_slices,
                            validation_split=0.2, epochs=150, batch_size=10)
