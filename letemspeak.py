@@ -85,7 +85,8 @@ def main():
                 }
                 with open('output/meta.json', 'w') as fp:
                     fp.write(json.dumps(model_meta))
-            save_val_results(test_key, test_start, val_outputs, output_dir=output_dir)
+
+            # save_val_results(test_key, test_start, val_outputs, output_dir=output_dir)
 
 
 if __name__ == '__main__':
