@@ -1,11 +1,26 @@
 import json
 import os
+import csv
 
 import numpy as np
 from moviepy.editor import VideoFileClip
 
 from video_processor import process_video
 from audio_processor import process_audio
+from data_utils import build_meta
+
+
+def remake_meta(data_dir, filename):
+    clip_dictionary = {}
+    with open(filename) as fp:
+        reader = csv.reader(fp, delimiter=',')
+        for row in reader:
+            if row[0] not in clip_dictionary:
+                clip_dictionary[row[0]] = []
+
+            clip_dictionary[row[0]].append((float(row[1]), float(row[2]), float(row[3]), float(row[4])))
+
+    build_meta(data_dir, clip_dictionary)
 
 
 def build_sample_slices(feed_dir, speaker_key):

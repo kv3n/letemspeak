@@ -5,6 +5,7 @@ import os
 import csv
 import random
 import json
+import glob
 
 
 def prep_directory():
@@ -29,8 +30,8 @@ def build_meta(output_dir, clip_dictionary):
             meta_data = json.load(fp)
             samples_in_meta = set(list(meta_data.keys()))
 
-    dir_samples = os.listdir(output_dir)
-    sample_in_directory = set([sample[:-4] for sample in dir_samples if not sample == 'meta.json'])
+    dir_samples = glob.glob('{}/*.mp4'.format(output_dir))
+    sample_in_directory = set([sample.replace(output_dir + '/', '').replace('.mp4', '') for sample in dir_samples])
     samples_not_in_meta = sample_in_directory - samples_in_meta
 
     for sample in samples_not_in_meta:
