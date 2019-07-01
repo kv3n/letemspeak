@@ -28,18 +28,19 @@ class Feed:
     def build_sample(self, speaker_key):
         filename = '{}/{}.mp4'.format(self.feed_dir, speaker_key)
 
-        video = VideoFileClip(filename).set_fps(25)
-        start = math.floor(random.uniform(0.0, video.duration - 3.0))
-        start = 2.0
+        video = VideoFileClip(filename)
+        start = random.uniform(0.0, video.duration - 3.0)
         end = start + 3.0
 
-        video = video.subclip(start, end).set_fps(25)
-        audio = video.audio.set_fps(16000)
-        waveform = audio.to_soundarray()[:, 0]  # We only care about the left channel
+        video = video.subclip(start, end)
+        waveform = video.audio.to_soundarray(fps=16000)[:, 0]  # We only care about the left channel
 
-        frames = [frame for frame in video.iter_frames(with_times=False)]
+        frames = [frame for frame in video.iter_frames(with_times=False, fps=25)]
 
         assert(len(frames) == 75)
+        assert(waveform.shape[0] == 48000)
+
+        video.close()
 
         return start, frames, waveform
 
@@ -48,7 +49,7 @@ class Feed:
         # sample_key = '1yo45HeVCDE_26'
         # sample_key = '1yo45HeVCDE_17'
         # sample_key = 'tNdxD5kcvjU_0'
-        sample_key = '2n7upXwH8pc_0'
+        # sample_key = '2n7upXwH8pc_0'
         start, frames, waveform = self.build_sample(sample_key)
 
         print('Picked Key: {} at start {}'.format(sample_key, start))

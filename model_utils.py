@@ -54,7 +54,6 @@ def create_pooling_layer(name, size=2, stride=2, padding='same'):
 
 def video_dilation_network():
     video_network = tf.keras.Sequential([
-        tf.keras.layers.Reshape((75, 1, 1792)),
         create_conv_layer(name='Vid01', filters=256, size=(7, 1), dilation=(1, 1)),
         create_conv_layer(name='Vid02', filters=256, size=(5, 1), dilation=(1, 1)),
         create_conv_layer(name='Vid03', filters=256, size=(5, 1), dilation=(2, 1)),
@@ -75,7 +74,6 @@ def video_dilation_network():
 
 def audio_dilation_network():
     audio_network = tf.keras.Sequential([
-        tf.keras.layers.Reshape((298, 257, 2)),
         create_conv_layer(name='Aud01', filters=96, size=(1, 7), dilation=(1, 1)),
         create_conv_layer(name='Aud02', filters=96, size=(5, 1), dilation=(1, 1)),
         create_conv_layer(name='Aud03', filters=96, size=(5, 5), dilation=(1, 1)),
@@ -101,18 +99,22 @@ def audio_dilation_network():
 
 
 def power_loss(true_spectrogram, mask_spectrogram):
-    true_spectrogram = tf.reshape(true_spectrogram, (-1, 298, 257, 2))
-    mask_spectrogram = tf.reshape(mask_spectrogram, (-1, 298, 257, 2))
-
     reconstructed_spectrogram = break_complex_spectrogram(apply_mask(true_spectrogram, mask_spectrogram))
 
     loss = tf.math.sqrt(tf.nn.l2_loss(reconstructed_spectrogram[:, :, :] - true_spectrogram[:, :, :]))
     return loss
 
 
+def build_output_functor(model):
+    # with a Sequential model
+    get_output = tf.keras.backend.function([model.layers[0].input, model.layers[1].input],
+                                           [model.layers[-1].output])
+    return get_output
+
+
 def stitch_model():
-    video_input = tf.keras.layers.Input(shape=[134400])
-    audio_input = tf.keras.layers.Input(shape=[153172])
+    video_input = tf.keras.layers.Input(shape=[75, 1, 1792])
+    audio_input = tf.keras.layers.Input(shape=[298, 257, 2])
 
     video_stream = video_dilation_network()
     audio_stream = audio_dilation_network()
@@ -126,7 +128,9 @@ def stitch_model():
     fc2 = tf.keras.layers.Dense(200)(fc1)
     fc3 = tf.keras.layers.Dense(298*257*2)(fc2)
 
-    final_model = tf.keras.Model(inputs=[video_input, audio_input], outputs=fc3)
+    complex_mask = tf.keras.layers.Reshape((298, 257, 2))(fc3)
+    final_model = tf.keras.Model(inputs=[video_input, audio_input], outputs=complex_mask)
+
     final_model.compile(loss=power_loss,
                         optimizer='adam',
                         metrics=['accuracy'])
