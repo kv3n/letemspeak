@@ -3,7 +3,7 @@ import os
 import json
 
 import tensorflow as tf
-from numpy import np
+import numpy as np
 
 from data_feed import DatasetIterator
 from model_utils import stitch_model, build_output_functor
