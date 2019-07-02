@@ -3,6 +3,7 @@ import os
 import json
 
 import tensorflow as tf
+from numpy import np
 
 from data_feed import DatasetIterator
 from model_utils import stitch_model, build_output_functor
@@ -29,7 +30,27 @@ def load_model_weights(model):
 
 
 def main():
-    # Logging and Output setup
+    keras_loop()
+
+
+def keras_loop():
+    run_time = time.time()
+    tensorboard = tf.keras.callbacks.TensorBoard(log_dir="logs/{}".format(run_time))
+    checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath='output/{}'.format(run_time),
+                                                    save_best_only=True,
+                                                    save_weights_only=True,
+                                                    load_weights_on_restart=True)
+
+    letemspeak_network = stitch_model()
+    video_input_slices = np.loadtxt('data/train/x1.csv', dtype=np.float32, delimiter=',')
+    audio_input_slices = np.loadtxt('data/train/x2.csv', dtype=np.float32, delimiter=',')
+
+    letemspeak_network.fit([video_input_slices, audio_input_slices], audio_input_slices,
+                           validation_split=0.2, epochs=150, batch_size=4,
+                           callbacks=[tensorboard, checkpoint])
+
+
+def custom_training_loop():
     run_time = time.time()
     output_dir = 'run_{}'.format(run_time)
     training_log = tf.summary.create_file_writer('logs/{}_train/'.format(run_time))

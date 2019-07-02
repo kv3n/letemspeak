@@ -99,6 +99,9 @@ def audio_dilation_network():
 
 
 def power_loss(true_spectrogram, mask_spectrogram):
+    true_spectrogram = tf.reshape(true_spectrogram, (-1, 298, 257, 2))
+    mask_spectrogram = tf.reshape(mask_spectrogram, (-1, 298, 257, 2))
+
     reconstructed_spectrogram = break_complex_spectrogram(apply_mask(true_spectrogram, mask_spectrogram))
 
     loss = tf.math.sqrt(tf.nn.l2_loss(reconstructed_spectrogram[:, :, :] - true_spectrogram[:, :, :]))
@@ -113,8 +116,8 @@ def build_output_functor(model):
 
 
 def stitch_model():
-    video_input = tf.keras.layers.Input(shape=[75, 1, 1792])
-    audio_input = tf.keras.layers.Input(shape=[298, 257, 2])
+    video_input = tf.keras.layers.Input(shape=[134400])
+    audio_input = tf.keras.layers.Input(shape=[153172])
 
     video_stream = video_dilation_network()
     audio_stream = audio_dilation_network()
@@ -128,8 +131,7 @@ def stitch_model():
     fc2 = tf.keras.layers.Dense(200)(fc1)
     fc3 = tf.keras.layers.Dense(298*257*2)(fc2)
 
-    complex_mask = tf.keras.layers.Reshape((298, 257, 2))(fc3)
-    final_model = tf.keras.Model(inputs=[video_input, audio_input], outputs=complex_mask)
+    final_model = tf.keras.Model(inputs=[video_input, audio_input], outputs=fc3)
 
     final_model.compile(loss=power_loss,
                         optimizer='adam',
