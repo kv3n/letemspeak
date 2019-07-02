@@ -45,6 +45,8 @@ def keras_loop():
     video_input_slices = np.loadtxt('data/train/x1.csv', dtype=np.float32, delimiter=',')
     audio_input_slices = np.loadtxt('data/train/x2.csv', dtype=np.float32, delimiter=',')
 
+    print('Training on {} samples'.format(video_input_slices.shape[0]))
+
     letemspeak_network.fit([video_input_slices, audio_input_slices], audio_input_slices,
                            validation_split=0.2, epochs=150, batch_size=4,
                            callbacks=[tensorboard, checkpoint])
