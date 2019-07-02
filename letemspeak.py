@@ -42,8 +42,8 @@ def keras_loop():
                                                     load_weights_on_restart=True)
 
     letemspeak_network = stitch_model()
-    video_input_slices = np.loadtxt('data/train/x1.csv', dtype=np.float32, delimiter=',')
-    audio_input_slices = np.loadtxt('data/train/x2.csv', dtype=np.float32, delimiter=',')
+    video_input_slices = np.loadtxt('data/train/video.csv', dtype=np.float32, delimiter=',')
+    audio_input_slices = np.loadtxt('data/train/audio.csv', dtype=np.float32, delimiter=',')
 
     print('Training on {} samples'.format(video_input_slices.shape[0]))
 
