@@ -54,6 +54,7 @@ def create_pooling_layer(name, size=2, stride=2, padding='same'):
 
 def video_dilation_network():
     video_network = tf.keras.Sequential([
+        tf.keras.layers.Reshape((75, 1, 1792)),
         create_conv_layer(name='Vid01', filters=256, size=(7, 1), dilation=(1, 1)),
         create_conv_layer(name='Vid02', filters=256, size=(5, 1), dilation=(1, 1)),
         create_conv_layer(name='Vid03', filters=256, size=(5, 1), dilation=(2, 1)),
@@ -74,6 +75,7 @@ def video_dilation_network():
 
 def audio_dilation_network():
     audio_network = tf.keras.Sequential([
+        tf.keras.layers.Reshape((298, 257, 2)),
         create_conv_layer(name='Aud01', filters=96, size=(1, 7), dilation=(1, 1)),
         create_conv_layer(name='Aud02', filters=96, size=(5, 1), dilation=(1, 1)),
         create_conv_layer(name='Aud03', filters=96, size=(5, 5), dilation=(1, 1)),
