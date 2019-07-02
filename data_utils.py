@@ -25,21 +25,28 @@ def build_meta(output_dir, clip_dictionary):
 
     samples_in_meta = set()
     meta_data = dict()
+
     if os.path.exists(meta_file):
         with open('{}/meta.json'.format(output_dir), 'r') as fp:
             meta_data = json.load(fp)
             samples_in_meta = set(list(meta_data.keys()))
+    print('Meta thinks there are {} samples'.format(len(samples_in_meta)))
 
     dir_samples = glob.glob('{}/*.mp4'.format(output_dir))
     sample_in_directory = set([sample.replace(output_dir + '/', '').replace('.mp4', '') for sample in dir_samples])
-    samples_not_in_meta = sample_in_directory - samples_in_meta
+    print('Directory has {} samples'.format(len(sample_in_directory)))
 
-    for sample in samples_not_in_meta:
+    # Sync all samples in directory that are not in meta
+    for sample in sample_in_directory - samples_in_meta:
         sample_split = sample.split('_')
         clip_key = '_'.join(sample_split[0:-1])
         param_key = int(sample_split[-1])
         params = clip_dictionary[clip_key][param_key]
         meta_data[sample] = (params[2], params[3])
+
+    # Remove all samples in meta that are not in directory
+    for sample in samples_in_meta - sample_in_directory:
+        meta_data.pop(sample)
 
     used_clips = set()
     for clip_id, _ in meta_data.items():
@@ -47,6 +54,7 @@ def build_meta(output_dir, clip_dictionary):
         used_clips.add(clip_key)
 
     with open('{}/meta.json'.format(output_dir), 'w') as fp:
+        print('Saving new meta with {} samples'.format(len(meta_data.keys())))
         fp.write(json.dumps(meta_data))
 
     return meta_data, used_clips
