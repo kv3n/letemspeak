@@ -103,7 +103,7 @@ def iter_samples(data_dir, should_filter_ground_truth):
     sample_count = len(samples)
     for idx, sample in enumerate(samples):
         true_speaker_location = feed_dict[sample] if should_filter_ground_truth else None
-        mode = 'w' if idx == 0 else 'a'
+        mode = 'a'
 
         print('Making Sample {} -> {} of {}'.format(sample, idx+1, sample_count))
         build_sample_file(data_dir, sample, true_speaker_location, mode)
